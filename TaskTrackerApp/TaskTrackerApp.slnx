@@ -1,3 +1,10 @@
 <Solution>
+  <Folder Name="/Элементы решения/">
+    <File Path="compose.yaml" />
+  </Folder>
   <Project Path="TaskTrackerApp.Api/TaskTrackerApp.Api.csproj" />
+  <Project Path="TaskTrackerApp.Application/TaskTrackerApp.Application.csproj" />
+  <Project Path="TaskTrackerApp.Domain/TaskTrackerApp.Domain.csproj" />
+  <Project Path="TaskTrackerApp.Infrastructure/TaskTrackerApp.Infrastructure.csproj" />
+  <Project Path="TaskTrackerApp.Persistence/TaskTrackerApp.Persistence.csproj" />
 </Solution>

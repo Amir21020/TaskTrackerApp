@@ -4,10 +4,23 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>b104886e-6f96-4d36-a3b0-9b2e2fc2be4e</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaskTrackerApp.Application\TaskTrackerApp.Application.csproj" />
+    <ProjectReference Include="..\TaskTrackerApp.Infrastructure\TaskTrackerApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\TaskTrackerApp.Persistence\TaskTrackerApp.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

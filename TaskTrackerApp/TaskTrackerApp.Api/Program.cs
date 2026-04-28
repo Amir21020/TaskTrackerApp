@@ -1,15 +1,21 @@
-var builder = WebApplication.CreateBuilder(args);
+using TaskTrackerApp.Api;
+using TaskTrackerApp.Api.Extensions;
 
-builder.Services.AddOpenApi();
+var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+
+builder.Services.AddPresentation();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(config);
+builder.Services.AddAuth(config);
+builder.Services.AddPersistence(config);
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
+app.UseHttpsRedirection();       
+app.UseDevelopmentTools();       
+app.UseCorsConfiguration();      
+app.UseCustomAuthentication();   
+app.UseApplicationEndpoints();   
 
 app.Run();
