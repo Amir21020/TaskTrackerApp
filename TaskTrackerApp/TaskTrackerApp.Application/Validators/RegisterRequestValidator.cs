@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using TaskTrackerApp.Domain.DTOs;
+using TaskTrackerApp.Application.DTOs;
 
 namespace TaskTrackerApp.Application.Validators;
 
