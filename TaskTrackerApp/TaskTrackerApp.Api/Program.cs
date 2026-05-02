@@ -14,9 +14,11 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(config);
 builder.Services.AddAuth(config);
 builder.Services.AddPersistence(config);
+builder.Services.AddErrorHandling();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();       
 app.UseDevelopmentTools();       
 app.UseCorsConfiguration();
