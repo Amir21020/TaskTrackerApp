@@ -7,19 +7,16 @@
             <router-link to="/login" class="text-blue-600 hover:underline">Войти</router-link>
         </p>
 
-        <button 
-            type="button" 
-            class="w-full h-11 mt-4 flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 transition-all"
-        >
-            <GoogleIcon class="w-5 h-5" />
-            Войти через Google
-        </button>
+        <Divider text="или" />
+
+
+        <GoogleButton />
 
     </AuthCard>
 </template>
 
 <script setup>
-import { GoogleIcon } from '@/shared/assets'
 import { AuthCard } from '@/widgets/auth-card'
-import { SignUpForm } from '@/features/auth'
+import { SignUpForm, GoogleButton} from '@/features/auth'
+import { Divider } from '@/shared/ui'
 </script>
