@@ -1,4 +1,6 @@
-﻿using TaskTrackerApp.Api.Endpoints;
+﻿using Serilog;
+using TaskTrackerApp.Api.Endpoints;
+using TaskTrackerApp.Api.Middlewares;
 
 namespace TaskTrackerApp.Api;
 
@@ -17,6 +19,13 @@ public static class AppicationBuilderExtensions
     {
         app.UseAuthentication();
         app.UseAuthorization();
+        return app;
+    }
+
+    public static WebApplication UseLogging(this WebApplication app)
+    {
+        app.UseSerilogRequestLogging();
+        app.UseMiddleware<RequestContextLoggingMiddleware>();
         return app;
     }
 

@@ -1,7 +1,12 @@
+using Serilog;
 using TaskTrackerApp.Api;
 using TaskTrackerApp.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, config) =>
+            config.ReadFrom.Configuration(context.Configuration));
+
 var config = builder.Configuration;
 
 builder.Services.AddPresentation();
@@ -14,7 +19,8 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();       
 app.UseDevelopmentTools();       
-app.UseCorsConfiguration();      
+app.UseCorsConfiguration();
+app.UseLogging();
 app.UseCustomAuthentication();   
 app.UseApplicationEndpoints();   
 
