@@ -2,6 +2,7 @@
 using Google.Apis.Auth.OAuth2.Flows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Security.Authentication;
 using TaskTrackerApp.Application.DTOs;
 using TaskTrackerApp.Application.Interfaces;
 using TaskTrackerApp.Domain.Entities;
@@ -31,7 +32,32 @@ public sealed class AuthService(
         Scopes = new[] { "openid", "email", "profile" }
     });
 
-    public async Task<TokenResponse> LoginWithGoogleAsync(GoogleLoginRequest request, CancellationToken ct = default)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByEmailAsync(request.Email, ct);
+        const string authError = "Неверный email или пароль.";
+
+        if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
+        {
+            throw new AuthenticationException(authError);
+        }
+
+        var accessTokenValue = tokenProvider.GenerateAccessToken(user);
+        var refreshTokenValue = tokenProvider.GenerateRefreshToken();
+
+
+        var expiryDate = DateTime.UtcNow.AddDays(request.RememberMe ? 30 : 7);
+
+        var token = RefreshToken.Create(refreshTokenValue, user.Id, expiryDate);
+        await refreshTokenRepository.AddAsync(token, ct);
+
+        return new LoginResponse(
+            new TokenDto(accessTokenValue.Token, accessTokenValue.Expiry),
+            new TokenDto(refreshTokenValue, expiryDate),
+            new UserResponse(user.FirstName, user.LastName, user.Email, user.AvatarUrl)
+        );
+    }
+    public async Task<LoginResponse> LoginWithGoogleAsync(GoogleLoginRequest request, CancellationToken ct = default)
     {
         var tokenResponse = await _flow.ExchangeCodeForTokenAsync("user", request.Code, "postmessage", ct);
         var payload = await GoogleJsonWebSignature.ValidateAsync(tokenResponse.IdToken, new() { Audience = new[] { options.Value.ClientId } });
@@ -50,13 +76,20 @@ public sealed class AuthService(
             userRepository.Update(user);
         }
 
-        var refreshToken = tokenProvider.GenerateRefreshToken();
-        var accessToken = tokenProvider.GenerateAccessToken(user);
-        await refreshTokenRepository.AddAsync(RefreshToken.Create(refreshToken, user.Id), ct);
+        var accessTokenResult = tokenProvider.GenerateAccessToken(user);
+        var refreshTokenValue = tokenProvider.GenerateRefreshToken();
 
+        var refreshExpiry = DateTime.UtcNow.AddDays(7);
+
+        await refreshTokenRepository.AddAsync(RefreshToken.Create(refreshTokenValue, user.Id, refreshExpiry), ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        return new(accessToken, refreshToken);
+        return new LoginResponse(
+            new TokenDto(accessTokenResult.Token, accessTokenResult.Expiry),
+            new TokenDto(refreshTokenValue, refreshExpiry),
+            new UserResponse(user.FirstName, user.LastName, user.Email, user.AvatarUrl)
+        );
+
     }
 
     public async Task RegisterAsync(RegisterRequest request, CancellationToken ct = default)

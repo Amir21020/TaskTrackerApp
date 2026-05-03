@@ -9,13 +9,13 @@ public sealed class RefreshToken : BaseEntity
     public Guid UserId { get; set; }
     public User User { get; set; }
 
-    public static RefreshToken Create(string token, Guid userId, int daysToExpire = 7)
+    public static RefreshToken Create(string token, Guid userId, DateTime daysToExpire)
     {
         return new RefreshToken
         {
             Token = token,
             UserId = userId,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(daysToExpire),
+            ExpiresAt = daysToExpire,
             IsRevoked = false 
         };
     }

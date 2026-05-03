@@ -1,4 +1,5 @@
-﻿using TaskTrackerApp.Application.DTOs;
+﻿using TaskTrackerApp.Api.Filters;
+using TaskTrackerApp.Application.DTOs;
 using TaskTrackerApp.Application.Interfaces;
 
 namespace TaskTrackerApp.Api.Endpoints;
@@ -9,8 +10,9 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth");
 
-        group.MapPost("/sign-up", RegisterAsync);
         group.MapPost("/google-login", GoogleLoginAsync);
+        group.MapPost("/sign-up", RegisterAsync).AddEndpointFilter<ValidationFilter<RegisterRequest>>();
+        group.MapPost("/login", LoginAsync).AddEndpointFilter<ValidationFilter<LoginRequest>>();
     }
 
     private static async Task<IResult> RegisterAsync(IAuthService authService, RegisterRequest request, CancellationToken ct = default)
@@ -19,9 +21,43 @@ public static class AuthEndpoints
         return Results.NoContent();
     }
 
-    private static async Task<IResult> GoogleLoginAsync(IAuthService authService, GoogleLoginRequest request, CancellationToken ct = default)
+    private static async Task<IResult> LoginAsync(IAuthService authService, LoginRequest request, HttpResponse response, CancellationToken ct = default)
     {
-        var tokenResponse = await authService.LoginWithGoogleAsync(request, ct);
-        return Results.Ok(tokenResponse);
+        var loginResult = await authService.LoginAsync(request, ct);
+
+        SetTokenCookies(response, loginResult);
+
+        return Results.Ok(loginResult.User);
+    }
+
+    private static async Task<IResult> GoogleLoginAsync(IAuthService authService, GoogleLoginRequest request, HttpResponse response, CancellationToken ct = default)
+    {
+        var loginResult = await authService.LoginWithGoogleAsync(request, ct);
+
+        SetTokenCookies(response, loginResult);
+
+        return Results.Ok(loginResult.User);
+    }
+
+    private static void SetTokenCookies(HttpResponse response, LoginResponse loginResult)
+    {
+        var accessCookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = loginResult.AccessToken.Expiry
+        };
+
+        var refreshCookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = loginResult.RefreshToken.Expiry
+        };
+
+        response.Cookies.Append("access_token", loginResult.AccessToken.Token, accessCookieOptions);
+        response.Cookies.Append("refresh_token", loginResult.RefreshToken.Token, refreshCookieOptions);
     }
 }
