@@ -25,7 +25,7 @@
       <div class="flex justify-between items-center mt-2">
         <BaseCheckbox label="Запомнить меня" v-model="form.rememberMe"></BaseCheckbox>      
         <RouterLink 
-          to="/forgot-password" 
+          :to="ROUTES.FORGOT_PASSWORD" 
           class="text-sm text-blue-600 hover:text-blue-700 hover:underline"
         >
           Забыли пароль?
@@ -42,6 +42,7 @@
 <script setup>
 import { useSignIn } from '../model/useSignIn';
 import { BaseInput, BaseButton, PasswordInput, BaseCheckbox } from '@/shared/ui';
+import { ROUTES } from '@/shared/config/routes'
 
 const { handleSignIn, form, errors, isLoading } = useSignIn(); 
 </script>
