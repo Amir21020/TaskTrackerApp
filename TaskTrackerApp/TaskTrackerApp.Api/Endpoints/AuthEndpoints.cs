@@ -14,8 +14,15 @@ public static class AuthEndpoints
         group.MapPost("/sign-up", RegisterAsync).AddEndpointFilter<ValidationFilter<RegisterRequest>>();
         group.MapPost("/login", LoginAsync).AddEndpointFilter<ValidationFilter<LoginRequest>>();
         group.MapPost("/forgot-password", ForgotPasswordAsync).AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>();
+        group.MapPost("/reset-password", ResetPasswordAsync).AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>();
         group.MapPost("/refresh", RefreshAsync);
 
+    }
+    
+    private static async Task<IResult> ResetPasswordAsync(IAuthService authService, ResetPasswordRequest request, CancellationToken ct = default)
+    {
+        await authService.ResetPasswordAsync(request, ct);
+        return Results.NoContent();
     }
 
     private static async Task<IResult> RegisterAsync(IAuthService authService, RegisterRequest request, CancellationToken ct = default)

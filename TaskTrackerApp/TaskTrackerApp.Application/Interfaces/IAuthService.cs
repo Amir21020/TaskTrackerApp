@@ -9,4 +9,5 @@ public interface IAuthService
     Task<LoginResponse> LoginWithGoogleAsync(GoogleLoginRequest request, CancellationToken ct = default);
     Task<LoginResponse> RefreshAsync(string refreshToken, CancellationToken ct = default);
     Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken ct = default);
+    Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default);
 }

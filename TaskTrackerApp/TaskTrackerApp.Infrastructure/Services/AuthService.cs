@@ -162,4 +162,29 @@ public sealed class AuthService(
 
         await emailService.SendPasswordResetLinkAsync(request.Email, resetLink, ct);
     }
+
+    public async Task ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default)
+    {
+        var hashedToken = HashToken(request.Token);
+        var tokenEntity = await passwordResetTokenRepository.GetByEmailAndTokenAsync(request.Email, hashedToken, ct);
+
+        if (tokenEntity is null || !tokenEntity.IsUsed || tokenEntity.ExpiresAt < DateTime.UtcNow)
+        {
+            throw new AuthenticationException("Ссылка для сброса пароля недействительна или устарела.");
+        }
+
+        var user = await userRepository.GetByIdAsync(tokenEntity.UserId, ct);
+        if (user is null)
+        {
+            throw new AuthenticationException("Пользователь не найден.");
+        }
+
+        user.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        userRepository.Update(user);
+
+        tokenEntity.IsUsed = true;
+        passwordResetTokenRepository.Update(tokenEntity);
+
+        await unitOfWork.SaveChangesAsync(ct);
+    }
 }
