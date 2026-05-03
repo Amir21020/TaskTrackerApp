@@ -19,12 +19,6 @@ public static class AuthEndpoints
 
     }
     
-    private static async Task<IResult> ResetPasswordAsync(IAuthService authService, ResetPasswordRequest request, CancellationToken ct = default)
-    {
-        await authService.ResetPasswordAsync(request, ct);
-        return Results.NoContent();
-    }
-
     private static async Task<IResult> RegisterAsync(IAuthService authService, RegisterRequest request, CancellationToken ct = default)
     {
         await authService.RegisterAsync(request, ct);
@@ -70,6 +64,12 @@ public static class AuthEndpoints
         return Results.NoContent();
     }
 
+    private static async Task<IResult> ResetPasswordAsync(IAuthService authService, ResetPasswordRequest request, CancellationToken ct = default)
+    {
+        await authService.ResetPasswordAsync(request, ct);
+        return Results.NoContent();
+    }
+
     private static void SetTokenCookies(HttpResponse response, LoginResponse loginResult)
     {
         var accessCookieOptions = new CookieOptions
@@ -91,4 +91,5 @@ public static class AuthEndpoints
         response.Cookies.Append("access_token", loginResult.AccessToken.Token, accessCookieOptions);
         response.Cookies.Append("refresh_token", loginResult.RefreshToken.Token, refreshCookieOptions);
     }
+
 }
