@@ -15,6 +15,7 @@ public static class AuthEndpoints
         group.MapPost("/login", LoginAsync).AddEndpointFilter<ValidationFilter<LoginRequest>>();
         group.MapPost("/forgot-password", ForgotPasswordAsync).AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>();
         group.MapPost("/reset-password", ResetPasswordAsync).AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>();
+        group.MapPost("/verify-email", VerifyEmailAsync).AddEndpointFilter<ValidationFilter<VerifyEmailRequest>>();
         group.MapPost("/refresh", RefreshAsync);
 
     }
@@ -68,6 +69,19 @@ public static class AuthEndpoints
     {
         await authService.ResetPasswordAsync(request, ct);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> VerifyEmailAsync(
+        IAuthService authService,
+        VerifyEmailRequest request,
+        HttpResponse response,
+        CancellationToken ct = default)
+    {
+        var loginResult = await authService.VerifyEmailAsync(request, ct);
+
+        SetTokenCookies(response, loginResult);
+
+        return Results.Ok(loginResult.User);
     }
 
     private static void SetTokenCookies(HttpResponse response, LoginResponse loginResult)

@@ -187,4 +187,34 @@ public sealed class AuthService(
 
         await unitOfWork.SaveChangesAsync(ct);
     }
+
+    public async Task<LoginResponse> VerifyEmailAsync(VerifyEmailRequest request, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByEmailAsync(request.Email, ct);
+
+        if (user is null || user.VerificationCode != request.Code || user.VerificationCodeExpiresAt < DateTime.UtcNow)
+        {
+            throw new AuthenticationException("Неверный или истекший код подтверждения.");
+        }
+
+        user.IsEmailConfirmed = true;
+        user.VerificationCode = null;
+        user.VerificationCodeExpiresAt = null;
+        userRepository.Update(user);
+
+        var accessTokenResult = tokenProvider.GenerateAccessToken(user);
+        var refreshTokenValue = tokenProvider.GenerateRefreshToken();
+        var expiryDate = DateTime.UtcNow.AddDays(7);
+
+        await SaveRefreshToken(refreshTokenValue, user.Id, expiryDate, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        return CreateLoginResponse(
+            user,
+            accessTokenResult.Token,
+            accessTokenResult.Expiry,
+            refreshTokenValue,
+            expiryDate
+        );
+    }
 }
