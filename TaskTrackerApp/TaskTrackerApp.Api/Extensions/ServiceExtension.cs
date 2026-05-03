@@ -107,6 +107,7 @@ public static class ServiceExtensions
             options.UseNpgsql(config.GetConnectionString("DefaultConnection"))
         );
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         return services;

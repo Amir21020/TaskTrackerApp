@@ -21,6 +21,7 @@ public sealed class AuthService(
     IEmailService emailService,
     IPasswordHasher passwordHasher,
     ITokenProvider tokenProvider,
+    IPasswordResetTokenRepository passwordResetTokenRepository,
     IRefreshTokenRepository refreshTokenRepository,
     IUserRepository userRepository) : IAuthService
 {
@@ -141,5 +142,24 @@ public sealed class AuthService(
     {
         using var sha256 = SHA256.Create();
         return Convert.ToBase64String(sha256.ComputeHash(Encoding.UTF8.GetBytes(token)));
+    }
+
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByEmailAsync(request.Email, ct);
+
+        if (user is null) return;
+
+        var token = tokenProvider.GenerateRefreshToken();
+        var hashedToken = HashToken(token);
+
+        var resetToken = PasswordResetToken.Create(hashedToken, user.Id, request.Email, DateTime.UtcNow.AddMinutes(15));
+        await passwordResetTokenRepository.AddAsync(resetToken, ct);
+        
+        await unitOfWork.SaveChangesAsync(ct);
+
+        var resetLink = $"http://localhost:5173/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(request.Email)}";
+
+        await emailService.SendPasswordResetLinkAsync(request.Email, resetLink, ct);
     }
 }

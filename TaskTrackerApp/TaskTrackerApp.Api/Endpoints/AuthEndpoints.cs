@@ -13,7 +13,9 @@ public static class AuthEndpoints
         group.MapPost("/google-login", GoogleLoginAsync);
         group.MapPost("/sign-up", RegisterAsync).AddEndpointFilter<ValidationFilter<RegisterRequest>>();
         group.MapPost("/login", LoginAsync).AddEndpointFilter<ValidationFilter<LoginRequest>>();
+        group.MapPost("/forgot-password", ForgotPasswordAsync).AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>();
         group.MapPost("/refresh", RefreshAsync);
+
     }
 
     private static async Task<IResult> RegisterAsync(IAuthService authService, RegisterRequest request, CancellationToken ct = default)
@@ -53,6 +55,12 @@ public static class AuthEndpoints
         SetTokenCookies(response, loginResult);
 
         return Results.Ok(loginResult.User);
+    }
+
+    private static async Task<IResult> ForgotPasswordAsync(IAuthService authService, ForgotPasswordRequest request, CancellationToken ct = default)
+    {
+        await authService.ForgotPasswordAsync(request, ct);
+        return Results.NoContent();
     }
 
     private static void SetTokenCookies(HttpResponse response, LoginResponse loginResult)

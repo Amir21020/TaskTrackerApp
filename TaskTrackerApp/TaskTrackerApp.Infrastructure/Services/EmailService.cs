@@ -82,4 +82,11 @@ public sealed class EmailService(
         }
         return content;
     }
+
+    public async Task SendPasswordResetLinkAsync(string to, string resetLink, CancellationToken ct = default)
+    {
+        logger.LogInformation("Sending password reset link to {Email}", to);
+        var body = await GetTemplateAsync("ResetPassword", new() { ["ResetLink"] = resetLink, ["AppName"] = _options.FromName }, ct);
+        await SendEmailInternalAsync(to, "Password Reset Request", body, ct);
+    }
 }
