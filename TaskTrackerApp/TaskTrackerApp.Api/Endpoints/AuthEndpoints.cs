@@ -13,6 +13,7 @@ public static class AuthEndpoints
         group.MapPost("/google-login", GoogleLoginAsync);
         group.MapPost("/sign-up", RegisterAsync).AddEndpointFilter<ValidationFilter<RegisterRequest>>();
         group.MapPost("/login", LoginAsync).AddEndpointFilter<ValidationFilter<LoginRequest>>();
+        group.MapPost("/refresh", RefreshAsync);
     }
 
     private static async Task<IResult> RegisterAsync(IAuthService authService, RegisterRequest request, CancellationToken ct = default)
@@ -33,6 +34,21 @@ public static class AuthEndpoints
     private static async Task<IResult> GoogleLoginAsync(IAuthService authService, GoogleLoginRequest request, HttpResponse response, CancellationToken ct = default)
     {
         var loginResult = await authService.LoginWithGoogleAsync(request, ct);
+
+        SetTokenCookies(response, loginResult);
+
+        return Results.Ok(loginResult.User);
+    }
+
+    private static async Task<IResult> RefreshAsync(IAuthService authService,
+        HttpRequest request,
+        HttpResponse response,
+        CancellationToken ct = default)
+    {
+        if (!request.Cookies.TryGetValue("refresh_token", out var refreshToken))
+            return Results.Unauthorized();
+
+        var loginResult = await authService.RefreshAsync(refreshToken, ct);
 
         SetTokenCookies(response, loginResult);
 

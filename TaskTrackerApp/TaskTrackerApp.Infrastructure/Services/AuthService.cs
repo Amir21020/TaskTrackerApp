@@ -3,6 +3,8 @@ using Google.Apis.Auth.OAuth2.Flows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Authentication;
+using System.Security.Cryptography;
+using System.Text;
 using TaskTrackerApp.Application.DTOs;
 using TaskTrackerApp.Application.Interfaces;
 using TaskTrackerApp.Domain.Entities;
@@ -22,7 +24,7 @@ public sealed class AuthService(
     IRefreshTokenRepository refreshTokenRepository,
     IUserRepository userRepository) : IAuthService
 {
-    private readonly GoogleAuthorizationCodeFlow _flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+    private readonly GoogleAuthorizationCodeFlow _flow = new(new GoogleAuthorizationCodeFlow.Initializer
     {
         ClientSecrets = new Google.Apis.Auth.OAuth2.ClientSecrets
         {
@@ -42,21 +44,15 @@ public sealed class AuthService(
             throw new AuthenticationException(authError);
         }
 
-        var accessTokenValue = tokenProvider.GenerateAccessToken(user);
+        var accessTokenResult = tokenProvider.GenerateAccessToken(user);
         var refreshTokenValue = tokenProvider.GenerateRefreshToken();
-
-
         var expiryDate = DateTime.UtcNow.AddDays(request.RememberMe ? 30 : 7);
 
-        var token = RefreshToken.Create(refreshTokenValue, user.Id, expiryDate);
-        await refreshTokenRepository.AddAsync(token, ct);
+        await SaveRefreshToken(refreshTokenValue, user.Id, expiryDate, ct);
 
-        return new LoginResponse(
-            new TokenDto(accessTokenValue.Token, accessTokenValue.Expiry),
-            new TokenDto(refreshTokenValue, expiryDate),
-            new UserResponse(user.FirstName, user.LastName, user.Email, user.AvatarUrl)
-        );
+        return CreateLoginResponse(user, accessTokenResult.Token, accessTokenResult.Expiry, refreshTokenValue, expiryDate);
     }
+
     public async Task<LoginResponse> LoginWithGoogleAsync(GoogleLoginRequest request, CancellationToken ct = default)
     {
         var tokenResponse = await _flow.ExchangeCodeForTokenAsync("user", request.Code, "postmessage", ct);
@@ -78,18 +74,36 @@ public sealed class AuthService(
 
         var accessTokenResult = tokenProvider.GenerateAccessToken(user);
         var refreshTokenValue = tokenProvider.GenerateRefreshToken();
+        var expiryDate = DateTime.UtcNow.AddDays(7);
 
-        var refreshExpiry = DateTime.UtcNow.AddDays(7);
-
-        await refreshTokenRepository.AddAsync(RefreshToken.Create(refreshTokenValue, user.Id, refreshExpiry), ct);
+        await SaveRefreshToken(refreshTokenValue, user.Id, expiryDate, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        return new LoginResponse(
-            new TokenDto(accessTokenResult.Token, accessTokenResult.Expiry),
-            new TokenDto(refreshTokenValue, refreshExpiry),
-            new UserResponse(user.FirstName, user.LastName, user.Email, user.AvatarUrl)
-        );
+        return CreateLoginResponse(user, accessTokenResult.Token, accessTokenResult.Expiry, refreshTokenValue, expiryDate);
+    }
 
+    public async Task<LoginResponse> RefreshAsync(string refreshToken, CancellationToken ct = default)
+    {
+        var hashedToken = HashToken(refreshToken);
+        var tokenEntity = await refreshTokenRepository.GetByTokenAsync(hashedToken, ct);
+
+        if (tokenEntity is null || tokenEntity.ExpiresAt < DateTime.UtcNow || tokenEntity.IsRevoked)
+        {
+            throw new AuthenticationException("Сессия истекла. Пожалуйста, войдите снова.");
+        }
+
+        var user = await userRepository.GetByIdAsync(tokenEntity.UserId, ct);
+
+        refreshTokenRepository.Delete(tokenEntity);
+
+        var accessTokenResult = tokenProvider.GenerateAccessToken(user);
+        var newRefreshTokenValue = tokenProvider.GenerateRefreshToken();
+        var newExpiry = DateTime.UtcNow.AddDays(7);
+
+        await SaveRefreshToken(newRefreshTokenValue, user.Id, newExpiry, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        return CreateLoginResponse(user, accessTokenResult.Token, accessTokenResult.Expiry, newRefreshTokenValue, newExpiry);
     }
 
     public async Task RegisterAsync(RegisterRequest request, CancellationToken ct = default)
@@ -97,18 +111,35 @@ public sealed class AuthService(
         var existingUser = await userRepository.GetByEmailAsync(request.Email, ct);
         if (existingUser != null)
             throw new InvalidOperationException("Такой пользователь уже существует");
-        
-        var passwordHash = passwordHasher.Hash(request.Password);
-        
-        var code = numericCodeGenerator.Generate(6);
 
-        var user = User.CreateWithCredentials(request.Email, request.FirstName, request.LastName, passwordHash, code); ;
-        
+        var passwordHash = passwordHasher.Hash(request.Password);
+        var code = numericCodeGenerator.Generate(6);
+        var user = User.CreateWithCredentials(request.Email, request.FirstName, request.LastName, passwordHash, code);
+
         await userRepository.AddAsync(user, ct);
         await unitOfWork.SaveChangesAsync(ct);
-
-
         await emailService.SendVerificationCodeAsync(request.Email, code, ct);
-        logger.LogInformation("User {Email} registered. Verification code sent.", request.Email);
+    }
+
+    private async Task SaveRefreshToken(string token, Guid userId, DateTime expiry, CancellationToken ct)
+    {
+        var hashedToken = HashToken(token);
+        var tokenEntity = RefreshToken.Create(hashedToken, userId, expiry);
+        await refreshTokenRepository.AddAsync(tokenEntity, ct);
+    }
+
+    private static LoginResponse CreateLoginResponse(User user, string accessToken, DateTime accessExpiry, string refreshToken, DateTime refreshExpiry)
+    {
+        return new LoginResponse(
+            new TokenDto(accessToken, accessExpiry),
+            new TokenDto(refreshToken, refreshExpiry),
+            new UserResponse(user.FirstName, user.LastName, user.Email, user.AvatarUrl)
+        );
+    }
+
+    private static string HashToken(string token)
+    {
+        using var sha256 = SHA256.Create();
+        return Convert.ToBase64String(sha256.ComputeHash(Encoding.UTF8.GetBytes(token)));
     }
 }
