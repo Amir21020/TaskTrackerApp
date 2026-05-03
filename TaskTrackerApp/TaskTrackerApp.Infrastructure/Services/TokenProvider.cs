@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using TaskTrackerApp.Application.DTOs;
 using TaskTrackerApp.Application.Interfaces;
 using TaskTrackerApp.Domain.Entities;
 using TaskTrackerApp.Infrastructure.Configuration;
@@ -14,7 +15,7 @@ public sealed class TokenProvider(IOptions<JwtOptions> options) : ITokenProvider
 {
     private readonly JwtOptions _jwtOptions = options.Value;
 
-    public string GenerateAccessToken(User user)
+    public TokenResult GenerateAccessToken(User user)
     {
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
 
@@ -28,16 +29,17 @@ public sealed class TokenProvider(IOptions<JwtOptions> options) : ITokenProvider
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
             SecurityAlgorithms.HmacSha256);
 
+        var expiresDate = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes);
         var token = new JwtSecurityToken(
             issuer: _jwtOptions.Issuer,
             audience: _jwtOptions.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes),
+            expires: expiresDate,
             signingCredentials: credentials);
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return tokenString;
+        return new(tokenString, expiresDate);
     }
 
     public string GenerateRefreshToken()

@@ -1,9 +1,10 @@
-﻿using TaskTrackerApp.Domain.Entities;
+﻿using TaskTrackerApp.Application.DTOs;
+using TaskTrackerApp.Domain.Entities;
 
 namespace TaskTrackerApp.Application.Interfaces;
 
 public interface ITokenProvider
 {
-    string GenerateAccessToken(User user);
+    TokenResult GenerateAccessToken(User user);
     string GenerateRefreshToken();
 }
