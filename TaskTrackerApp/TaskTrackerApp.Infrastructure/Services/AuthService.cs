@@ -217,4 +217,21 @@ public sealed class AuthService(
             expiryDate
         );
     }
+
+    public async Task ResendVerificationCodeAsync(string email, CancellationToken ct = default)
+    {
+        var user = await userRepository.GetByEmailAsync(email, ct);
+
+        if (user is null || user.IsEmailConfirmed) return;
+
+        var code = numericCodeGenerator.Generate(6);
+
+        user.VerificationCode = code;
+        user.VerificationCodeExpiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
+
+        userRepository.Update(user);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        await emailService.SendVerificationCodeAsync(email, code, ct);
+    }
 }

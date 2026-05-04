@@ -16,6 +16,7 @@ public static class AuthEndpoints
         group.MapPost("/forgot-password", ForgotPasswordAsync).AddEndpointFilter<ValidationFilter<ForgotPasswordRequest>>();
         group.MapPost("/reset-password", ResetPasswordAsync).AddEndpointFilter<ValidationFilter<ResetPasswordRequest>>();
         group.MapPost("/verify-email", VerifyEmailAsync).AddEndpointFilter<ValidationFilter<VerifyEmailRequest>>();
+        group.MapPost("/resend-verification-code", ResendVerificationCodeAsync);
         group.MapPost("/refresh", RefreshAsync);
 
     }
@@ -82,6 +83,12 @@ public static class AuthEndpoints
         SetTokenCookies(response, loginResult);
 
         return Results.Ok(loginResult.User);
+    }
+
+    private static async Task<IResult> ResendVerificationCodeAsync(IAuthService authService, string email, CancellationToken ct = default)
+    {
+        await authService.ResendVerificationCodeAsync(email, ct);
+        return Results.NoContent();
     }
 
     private static void SetTokenCookies(HttpResponse response, LoginResponse loginResult)

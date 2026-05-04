@@ -5,5 +5,7 @@ export const authApi = {
     googleLogin: (model) => apiClient.post("/auth/google-login", model),
     login: (model) => apiClient.post("/auth/login", model),
     forgotPassword: (model) => apiClient.post('/auth/forgot-password', model),
-    resetPassword: (model) => apiClient.post('/auth/reset-password', model)
+    resetPassword: (model) => apiClient.post('/auth/reset-password', model),
+    verifyEmail: (model) => apiClient.post('/verify-email', model),
+    resendVerificationCode: (email) => apiClient.post('/resend-verification-code', email)
 }

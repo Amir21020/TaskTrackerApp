@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-md bg-white p-8 rounded-xl select-none shadow-lg border border-gray-100">    
+  <div class="w-full max-w-md text-center bg-white p-8 rounded-xl select-none shadow-lg border border-gray-100">    
     <h2 class="text-2xl font-bold mb-2 text-gray-900">
       {{ title }}
     </h2>
