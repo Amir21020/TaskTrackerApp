@@ -2,9 +2,9 @@
 
 namespace TaskTrackerApp.Domain.Interfaces;
 
-public interface IGenericRepository<TEntity> where TEntity : BaseEntity 
+public interface IGenericRepository<TEntity, TId> where TEntity : BaseEntity<TId>
 {
-    Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<TEntity?> GetByIdAsync(TId id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TEntity>?> GetAllAsync(CancellationToken cancellationToken = default);
     Task AddAsync(TEntity entity, CancellationToken cancellationToken = default);
     void Update(TEntity entity);

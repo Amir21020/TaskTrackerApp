@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaskTrackerApp.Domain\TaskTrackerApp.Domain.csproj" />
+    <ProjectReference Include="..\TaskTrackerApp.Infrastructure\TaskTrackerApp.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

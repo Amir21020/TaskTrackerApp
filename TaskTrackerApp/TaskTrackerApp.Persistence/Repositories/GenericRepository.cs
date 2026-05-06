@@ -5,7 +5,7 @@ using TaskTrackerApp.Persistence.Data;
 
 namespace TaskTrackerApp.Persistence.Repositories;
 
-public class GenericRepository<TEntity>(AppDbContext context) : IGenericRepository<TEntity> where TEntity : BaseEntity
+public class GenericRepository<TEntity, TId>(AppDbContext context) : IGenericRepository<TEntity, TId> where TEntity : BaseEntity<TId>
 {
     protected readonly DbSet<TEntity> _dbSet = context.Set<TEntity>();
     public async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -17,9 +17,8 @@ public class GenericRepository<TEntity>(AppDbContext context) : IGenericReposito
     public async Task<IReadOnlyList<TEntity>?> GetAllAsync(CancellationToken cancellationToken = default)
         => await _dbSet.ToListAsync(cancellationToken);
 
-    public async Task<TEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        => await _dbSet.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-
+    public async Task<TEntity?> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+        => await _dbSet.FirstOrDefaultAsync(e => EF.Property<TId>(e, "Id").Equals(id), cancellationToken);
     public void Update(TEntity entity)
         => _dbSet.Update(entity);
 }
