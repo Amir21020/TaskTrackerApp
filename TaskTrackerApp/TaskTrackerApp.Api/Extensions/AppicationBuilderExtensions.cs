@@ -38,6 +38,7 @@ public static class AppicationBuilderExtensions
     public static WebApplication UseApplicationEndpoints(this WebApplication app)
     {
         app.MapAuthEndpoint();
+        app.MapRoleEndpoints();
 
         return app;
     }

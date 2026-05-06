@@ -7,6 +7,7 @@ using Minio;
 using System.Security.Claims;
 using System.Text;
 using TaskTrackerApp.Api.Exceptions;
+using TaskTrackerApp.Application.DTOs.RoleResponse;
 using TaskTrackerApp.Application.Interfaces;
 using TaskTrackerApp.Application.Validators;
 using TaskTrackerApp.Domain.Enums;
@@ -40,6 +41,7 @@ public static class ServiceExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRoleService, RoleService>();
         services.AddValidatorsFromAssembly(typeof(RegisterRequestValidator).Assembly);
         services.AddScoped<INumericCodeGenerator, NumericCodeGenerator>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
@@ -121,6 +123,7 @@ public static class ServiceExtensions
             options.UseNpgsql(config.GetConnectionString("DefaultConnection"))
         );
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
