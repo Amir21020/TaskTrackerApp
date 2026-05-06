@@ -1,6 +1,7 @@
 using Serilog;
 using TaskTrackerApp.Api;
 using TaskTrackerApp.Api.Extensions;
+using TaskTrackerApp.Persistence.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,12 @@ builder.Services.AddPersistence(config);
 builder.Services.AddErrorHandling();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<RoleSeeder>();
+    await seeder.SeedAsync();
+}
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();       

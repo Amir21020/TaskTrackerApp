@@ -1,14 +1,18 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Minio;
 using System.Security.Claims;
 using System.Text;
 using TaskTrackerApp.Api.Exceptions;
 using TaskTrackerApp.Application.Interfaces;
 using TaskTrackerApp.Application.Validators;
+using TaskTrackerApp.Domain.Enums;
 using TaskTrackerApp.Domain.Interfaces;
 using TaskTrackerApp.Infrastructure.Configuration;
+using TaskTrackerApp.Infrastructure.Security;
 using TaskTrackerApp.Infrastructure.Services;
 using TaskTrackerApp.Persistence.Data;
 using TaskTrackerApp.Persistence.Repositories;
@@ -45,6 +49,14 @@ public static class ServiceExtensions
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         services.AddScoped<IEmailService, EmailService>();
+        var minioSection = config.GetSection(nameof(MinioOptions));
+        services.Configure<MinioOptions>(minioSection);
+        var minioOptions = minioSection.Get<MinioOptions>();
+        services.AddMinio(client => client
+            .WithEndpoint(minioOptions.Endpoint)
+            .WithCredentials(minioOptions.AccessKey, minioOptions.SecretKey)
+            .WithSSL(minioOptions.UseSSL));
+        services.AddScoped<IBlobStorage, MinioBlobStorage>();
         services.Configure<SmtpOptions>(config.GetSection(nameof(SmtpOptions)));
         return services;
     }
@@ -53,7 +65,9 @@ public static class ServiceExtensions
     {
         services.Configure<GoogleOptions>(config.GetSection(nameof(GoogleOptions)));
         services.Configure<JwtOptions>(config.GetSection(nameof(JwtOptions)));
+        services.Configure<Infrastructure.Configuration.AuthorizationOptions>(config.GetSection(nameof(Infrastructure.Configuration.AuthorizationOptions)));
         services.AddScoped<ITokenProvider, TokenProvider>();
+        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
         var jwtOptions = config.GetSection(nameof(JwtOptions)).Get<JwtOptions>();
 
 
@@ -107,9 +121,11 @@ public static class ServiceExtensions
             options.UseNpgsql(config.GetConnectionString("DefaultConnection"))
         );
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<RoleSeeder>();
         return services;
     }
 
@@ -118,5 +134,15 @@ public static class ServiceExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
         return services;
+    }
+
+    public static IEndpointConventionBuilder RequirePermissions<TBuilder>(
+        this TBuilder builder, params PermissionType[] permissions)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        return builder.RequireAuthorization(policy =>
+        {
+            policy.AddRequirements(new PermissionRequiremen(permissions));
+        });
     }
 }
