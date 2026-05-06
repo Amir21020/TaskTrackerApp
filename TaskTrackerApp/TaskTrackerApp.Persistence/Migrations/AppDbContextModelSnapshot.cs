@@ -58,6 +58,75 @@ namespace TaskTrackerApp.Persistence.Migrations
                     b.ToTable("PasswordResetTokens");
                 });
 
+            modelBuilder.Entity("TaskTrackerApp.Domain.Entities.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "CreateProject"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "DeleteProject"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "ViewProject"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "UploadSchemes"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Name = "ApproveSchemes"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Name = "RejectSchemes"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Name = "CreateTask"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Name = "ExecuteTask"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Name = "UploadExecutionPhotos"
+                        },
+                        new
+                        {
+                            Id = 30,
+                            Name = "ViewReports"
+                        });
+                });
+
             modelBuilder.Entity("TaskTrackerApp.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -88,6 +157,45 @@ namespace TaskTrackerApp.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("TaskTrackerApp.Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IconUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("TaskTrackerApp.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("TaskTrackerApp.Domain.Entities.User", b =>
@@ -137,6 +245,21 @@ namespace TaskTrackerApp.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("TaskTrackerApp.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("RoleId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRoles");
+                });
+
             modelBuilder.Entity("TaskTrackerApp.Domain.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("TaskTrackerApp.Domain.Entities.User", "User")
@@ -155,6 +278,40 @@ namespace TaskTrackerApp.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TaskTrackerApp.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("TaskTrackerApp.Domain.Entities.Permission", null)
+                        .WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TaskTrackerApp.Domain.Entities.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TaskTrackerApp.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("TaskTrackerApp.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TaskTrackerApp.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });

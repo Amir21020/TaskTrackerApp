@@ -1,10 +1,11 @@
 ﻿namespace TaskTrackerApp.Domain.Entities;
 
-public sealed class User : BaseEntity
+public sealed class User : BaseEntity<Guid>
 {
     public User()
     {
-
+        Id = Guid.NewGuid();
+        CreatedAt = DateTime.UtcNow;
     }
 
     public static User CreateWithCredentials(string email, string firstName, string lastName, string passwordHash, string code)
@@ -39,8 +40,12 @@ public sealed class User : BaseEntity
     public string? PasswordHash { get; set; }
     public string? AvatarUrl { get; set; }
     public string? GoogleId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
 
     public bool IsEmailConfirmed { get; set; } = false;
     public string? VerificationCode { get; set; }
     public DateTimeOffset? VerificationCodeExpiresAt { get; set; }
+
+    public ICollection<Role> Roles { get; set; } = [];
 }
