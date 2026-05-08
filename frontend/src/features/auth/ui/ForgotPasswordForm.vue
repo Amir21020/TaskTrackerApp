@@ -37,7 +37,7 @@
 <script setup>
 import { BaseInput, BaseButton } from '@/shared/ui';
 import { useForgotPassword } from '../model/useForgotPassword';
-import { ROUTES } from '@/shared/config/routes'
+import { ROUTES } from '@/shared/routes'
 const { isLoading, handleForgotPassword, model, errors, isSuccess } = useForgotPassword();
 
 const handleSubmit = async () => {

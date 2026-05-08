@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import vue3GoogleLogin from 'vue3-google-login'
 import './app/styles/index.css'
 import { config } from '@/shared/config'
@@ -7,6 +8,7 @@ import { App, router } from './app'
 const app = createApp(App)
 console.log('Google Client ID:', config.googleClientId),
 
+app.use(createPinia())
 app.use(vue3GoogleLogin, {
   clientId: config.googleClientId
 })

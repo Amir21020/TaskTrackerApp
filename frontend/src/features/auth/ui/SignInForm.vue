@@ -42,7 +42,7 @@
 <script setup>
 import { useSignIn } from '../model/useSignIn';
 import { BaseInput, BaseButton, PasswordInput, BaseCheckbox } from '@/shared/ui';
-import { ROUTES } from '@/shared/config/routes'
+import { ROUTES } from '@/shared/routes'
 
 const { handleSignIn, form, errors, isLoading } = useSignIn(); 
 </script>

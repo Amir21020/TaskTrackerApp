@@ -58,7 +58,7 @@
 
 import { useResetPassword } from '../model/useResetPassword';
 import { BaseInput, BaseButton, PasswordInput } from '@/shared/ui';
-import { ROUTES } from '@/shared/config/routes';
+import { ROUTES } from '@/shared/routes';
 
 const { 
   model, 

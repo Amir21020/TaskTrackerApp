@@ -6,6 +6,6 @@ export const authApi = {
     login: (model) => apiClient.post("/auth/login", model),
     forgotPassword: (model) => apiClient.post('/auth/forgot-password', model),
     resetPassword: (model) => apiClient.post('/auth/reset-password', model),
-    verifyEmail: (model) => apiClient.post('/verify-email', model),
-    resendVerificationCode: (email) => apiClient.post('/resend-verification-code', email)
+    verifyEmail: (model) => apiClient.post('/auth/verify-email', model),
+    resendVerificationCode: (email) => apiClient.post('/auth/resend-verification-code', email),
 }

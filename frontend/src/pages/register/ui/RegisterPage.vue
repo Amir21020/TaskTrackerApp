@@ -1,11 +1,12 @@
 <template>
     <AuthCard title="Создать аккаунт">
-        <SignUpForm />
-
-        <p class="mt-4 text-center text-sm text-gray-600">
+        <p class="text-center text-sm mb-2 text-gray-600">
             Уже есть аккаунт? 
             <router-link to="/login" class="text-blue-600 hover:underline">Войти</router-link>
         </p>
+        <SignUpForm />
+
+        
 
         <Divider text="или" />
 
