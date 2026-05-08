@@ -1,0 +1,1 @@
+export {default as OnBoardingPage } from './ui/OnBoardingPage.vue'
