@@ -9,7 +9,8 @@ const routes = [
     { path: ROUTES.FORGOT_PASSWORD, component: () => import('@/pages/forgot-password').then(m => m.ForgotPasswordPage) },
     { path: ROUTES.RESET_PASSWORD, component: () => import('@/pages/reset-password').then(m => m.ResetPasswordPage )},
     { path: ROUTES.VERIFY_EMAIL, component: () => import('@/pages/verify-email').then(m => m.VerifyEmailPage) },
-    { path: ROUTES.ONBOARDING, component: () => import('@/pages/onboarding').then(m => m.OnBoardingPage)}
+    { path: ROUTES.ONBOARDING, component: () => import('@/pages/onboarding').then(m => m.OnBoardingPage) },
+    { path: '/:pathMatch(.*)*', component: () => import('@/pages/not-found').then(m => m.NotFoundPage)  }
 ]
 
 export const router = createRouter({
