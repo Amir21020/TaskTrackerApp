@@ -39,7 +39,7 @@ public static class AppicationBuilderExtensions
     {
         app.MapAuthEndpoint();
         app.MapRoleEndpoints();
-
+        app.MapUserEndpoints();
         return app;
     }
 }
